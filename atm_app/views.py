@@ -38,7 +38,33 @@ def _current_account(request):
 # ---------------------------------------------------------------------------
 
 
+def _ensure_demo_card():
+    try:
+        if not Card.objects.filter(card_number="4111111111111111").exists():
+            customer, _ = Customer.objects.get_or_create(
+                customer_id="CUSTDEMO01",
+                defaults={"name": "Ravi Kumar", "phone": "9876543210", "email": "ravi@example.com"}
+            )
+            account, _ = Account.objects.get_or_create(
+                customer=customer,
+                defaults={"account_number": "AC1000000001", "account_type": "SAVINGS", "balance": Decimal("50000.00"), "daily_withdrawal_limit": Decimal("25000.00")}
+            )
+            if not Card.objects.filter(card_number="4111111111111111").exists():
+                card = Card(
+                    card_number="4111111111111111",
+                    account=account,
+                    status="ACTIVE",
+                    failed_attempts=0,
+                    expiry_date=date(2030, 12, 31),
+                )
+                card.set_pin("1234")
+                card.save()
+    except Exception:
+        pass
+
+
 def login_view(request):
+    _ensure_demo_card()
     if request.session.get("account_id"):
         return redirect("atm_app:dashboard")
 
