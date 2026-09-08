@@ -149,7 +149,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATIC_ROOT.mkdir(parents=True, exist_ok=True)
+try:
+    STATIC_ROOT.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- ATM session / security settings (MODULE 14, MODULE 27) ---
