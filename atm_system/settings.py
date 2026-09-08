@@ -88,13 +88,26 @@ if DATABASE_URL:
             default=DATABASE_URL,
             conn_max_age=600,
             conn_health_checks=True,
+            ssl_require=True,
         )
     }
 else:
+    # Vercel serverless environment is read-only; copy db.sqlite3 to /tmp if using local SQLite
+    db_path = BASE_DIR / 'db.sqlite3'
+    tmp_db = Path('/tmp/db.sqlite3')
+    if db_path.exists() and os.name != 'nt':
+        import shutil
+        try:
+            if not tmp_db.exists():
+                shutil.copy2(db_path, tmp_db)
+            db_path = tmp_db
+        except Exception:
+            pass
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': db_path,
         }
     }
 
@@ -136,6 +149,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT.mkdir(parents=True, exist_ok=True)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- ATM session / security settings (MODULE 14, MODULE 27) ---
