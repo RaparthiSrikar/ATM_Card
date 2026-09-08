@@ -6,3 +6,6 @@ venv/
 *.log
 .DS_Store
 .env
+staticfiles/
+.vercel/
+
