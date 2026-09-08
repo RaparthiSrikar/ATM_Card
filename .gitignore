@@ -9,3 +9,6 @@ venv/
 staticfiles/
 .vercel/
 
+
+.vercel
+.env*
