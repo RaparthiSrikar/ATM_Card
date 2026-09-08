@@ -31,9 +31,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-*)2#%mkam)ij49=d&71=nb35ft
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
-ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1'] if not DEBUG else ['*']
-if os.getenv('ALLOWED_HOSTS'):
-    ALLOWED_HOSTS.extend([h.strip() for h in os.getenv('ALLOWED_HOSTS').split(',') if h.strip()])
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -138,7 +136,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- ATM session / security settings (MODULE 14, MODULE 27) ---
 LOGIN_URL = 'atm_app:login'
