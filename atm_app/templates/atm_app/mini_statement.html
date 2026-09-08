@@ -1,0 +1,41 @@
+{% extends "atm_app/base.html" %}
+{% block title %}Mini Statement — ABC Bank ATM{% endblock %}
+
+{% block side_left %}
+  <a class="side-btn linked" href="{% url 'atm_app:dashboard' %}" title="Back to menu">L1</a>
+  <span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+{% block side_right %}
+  <span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+
+{% block screen_header %}
+  <h2>Mini Statement</h2>
+  <span class="clock" data-clock>--:--:--</span>
+{% endblock %}
+
+{% block content %}
+  <p class="lede">Last {{ transactions|length }} transaction{{ transactions|length|pluralize }} on {{ account.account_number }}.</p>
+
+  <div class="receipt">
+    {% if transactions %}
+      {% for txn in transactions %}
+        <div class="receipt-row">
+          <span class="k">
+            {{ txn.timestamp|date:"d M, H:i" }} · {{ txn.get_transaction_type_display }}
+            {% if txn.status == 'FAILED' %}<span style="color:var(--error);">(failed)</span>{% endif %}
+          </span>
+          <span class="v">
+            {% if txn.transaction_type == 'WITHDRAWAL' or txn.transaction_type == 'TRANSFER_OUT' %}-{% elif txn.transaction_type == 'DEPOSIT' or txn.transaction_type == 'TRANSFER_IN' %}+{% endif %}₹{{ txn.amount }}
+          </span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="receipt-row"><span class="k">No transactions yet.</span></div>
+    {% endif %}
+  </div>
+
+  <div class="btn-row" style="margin-top:20px;">
+    <a href="{% url 'atm_app:dashboard' %}" class="btn-atm btn-primary">Back to menu</a>
+  </div>
+{% endblock %}

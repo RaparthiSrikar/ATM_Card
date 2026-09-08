@@ -1,0 +1,74 @@
+{% extends "atm_app/base.html" %}
+{% block title %}Sign in — ABC Bank ATM{% endblock %}
+
+{% block side_left %}
+<span class="side-btn"></span><span class="side-btn"></span>
+<span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+{% block side_right %}
+<span class="side-btn"></span><span class="side-btn"></span>
+<span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+
+{% block screen_header %}
+<h1>Welcome</h1>
+<span class="clock" data-clock>--:--:--</span>
+{% endblock %}
+
+{% block content %}
+<p class="lede">Insert your card and enter your PIN to begin. Your session ends automatically after five minutes of
+  inactivity.</p>
+
+<div class="card-slot-visual">
+  <div class="atm-card-graphic"></div>
+</div>
+
+<form method="post" id="login-form" novalidate>
+  {% csrf_token %}
+  <div class="atm-field">
+    <label for="{{ form.card_number.id_for_label }}">Card number</label>
+    <input type="text" name="card_number" id="{{ form.card_number.id_for_label }}"
+      class="atm-input {% if form.card_number.errors %}is-invalid{% endif %}" placeholder="1234 5678 9012 3456"
+      inputmode="numeric" maxlength="19" data-card-number="true" autocomplete="off" autofocus
+      value="{{ form.card_number.value|default:'' }}">
+    {% for error in form.card_number.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+  </div>
+
+  <div class="atm-field">
+    <label for="{{ form.pin.id_for_label }}">PIN</label>
+    <input type="password" name="pin" id="{{ form.pin.id_for_label }}"
+      class="atm-input atm-pin {% if form.pin.errors %}is-invalid{% endif %}" placeholder="••••" inputmode="numeric"
+      maxlength="4" data-numeric="digits" autocomplete="off">
+    {% for error in form.pin.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+  </div>
+
+  <button type="submit" class="btn-atm btn-primary" style="width:100%;">Insert card & continue</button>
+  <div style="margin-top: 15px; text-align: center;">
+    <a href="{% url 'atm_app:register' %}" class="btn-atm"
+      style="display: block; width: 100%; text-decoration: none; box-sizing: border-box; padding: 10px; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--accent, #00d2ff); color: #fff; border-radius: 6px;">+
+      Open New Account & Get ATM Card</a>
+  </div>
+  <p class="field-help" style="margin-top:14px;">Demo login — Ravi: card <span class="mono">4111 1111 1111 1111</span>,
+    PIN <span class="mono">1234</span></p>
+</form>
+
+<script>
+  (function () {
+    function initCardFormat() {
+      const input = document.querySelector('input[name="card_number"]');
+      if (!input) return;
+      const format = function () {
+        let raw = input.value.replace(/\D/g, "").slice(0, 16);
+        input.value = raw.replace(/(\d{4})(?=\d)/g, "$1 ");
+      };
+      ["input", "keyup", "paste", "change", "blur"].forEach(evt => input.addEventListener(evt, format));
+      if (input.value) format();
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initCardFormat);
+    } else {
+      initCardFormat();
+    }
+  })();
+</script>
+{% endblock %}

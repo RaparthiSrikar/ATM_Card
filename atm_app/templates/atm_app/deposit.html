@@ -1,0 +1,65 @@
+{% extends "atm_app/base.html" %}
+{% block title %}Deposit — ABC Bank ATM{% endblock %}
+
+{% block side_left %}
+  <a class="side-btn linked" href="{% url 'atm_app:dashboard' %}" title="Back to menu">L1</a>
+  <span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+{% block side_right %}
+  <span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+
+{% block screen_header %}
+  <h2>Cash Deposit</h2>
+  <span class="clock" data-clock>--:--:--</span>
+{% endblock %}
+
+{% block content %}
+  {% if result %}
+    <div class="receipt">
+      <div class="receipt-status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Deposit successful
+      </div>
+      <div class="receipt-row"><span class="k">Account</span><span class="v">{{ account.account_number }}</span></div>
+      <div class="receipt-row"><span class="k">Amount deposited</span><span class="v">₹{{ result.amount }}</span></div>
+      <div class="receipt-row"><span class="k">Updated balance</span><span class="v">₹{{ result.balance }}</span></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:20px;">
+      <a href="{% url 'atm_app:dashboard' %}" class="btn-atm btn-primary">Back to menu</a>
+      <a href="{% url 'atm_app:deposit' %}" class="btn-atm btn-ghost">Deposit again</a>
+    </div>
+  {% else %}
+    <div class="balance-label">Available balance</div>
+    <div class="balance-figure" style="font-size:24px;" data-count-to="{{ account.balance|stringformat:'f' }}">₹0</div>
+    <div style="height:18px;"></div>
+
+    <p class="lede">Place cash in the deposit slot, confirm the amount below, and the balance updates immediately.</p>
+
+    <div class="quick-amounts">
+      <button type="button" class="chip" data-amount="500">₹500</button>
+      <button type="button" class="chip" data-amount="1000">₹1,000</button>
+      <button type="button" class="chip" data-amount="5000">₹5,000</button>
+      <button type="button" class="chip" data-amount="10000">₹10,000</button>
+    </div>
+
+    <form method="post" data-processing="Counting cash…" novalidate>
+      {% csrf_token %}
+      <div class="atm-field">
+        <label for="{{ form.amount.id_for_label }}">Amount</label>
+        <input
+          type="number" name="amount" id="{{ form.amount.id_for_label }}"
+          class="atm-input {% if form.amount.errors %}is-invalid{% endif %}"
+          placeholder="Enter amount" step="1" min="1" required
+          data-numeric="amount"
+          value="{{ form.amount.value|default:'' }}">
+        {% for error in form.amount.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn-atm btn-primary">Deposit</button>
+        <a href="{% url 'atm_app:dashboard' %}" class="btn-atm btn-ghost">Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

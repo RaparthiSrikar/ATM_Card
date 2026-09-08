@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ABC Bank ATM{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/atm.css' %}">
+</head>
+<body>
+  <div class="kiosk">
+    <div class="kiosk-brand">
+      <div class="bank-mark">
+        <span class="chip"></span>
+        ABC BANK
+      </div>
+      <div>
+        {% if request.session.account_id %}
+          <span class="status-led on"></span>session active
+        {% else %}
+          <span class="status-led"></span>no card inserted
+        {% endif %}
+        &nbsp;·&nbsp;<span data-clock class="mono">--:--:--</span>
+      </div>
+    </div>
+
+    <div class="terminal-row">
+      <div class="side-buttons">
+        {% block side_left %}
+          <span class="side-btn">L1</span>
+          <span class="side-btn">L2</span>
+          <span class="side-btn">L3</span>
+          <span class="side-btn">L4</span>
+        {% endblock %}
+      </div>
+
+      <div class="screen">
+        <div class="screen-header">
+          {% block screen_header %}{% endblock %}
+        </div>
+
+        <div class="screen-body">
+          {% if messages %}
+            <div class="atm-messages">
+              {% for message in messages %}
+                <div class="atm-alert {{ message.tags }}">
+                  {% if message.tags == 'success' %}✓{% elif message.tags == 'error' %}⚠{% else %}ℹ{% endif %}
+                  <span>{{ message }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+
+      <div class="side-buttons">
+        {% block side_right %}
+          <span class="side-btn">R1</span>
+          <span class="side-btn">R2</span>
+          <span class="side-btn">R3</span>
+          <span class="side-btn">R4</span>
+        {% endblock %}
+      </div>
+    </div>
+
+    <div class="kiosk-slots">
+      <div class="slot"><div class="groove"></div>card</div>
+      <div class="slot"><div class="groove"></div>cash</div>
+      <div class="slot"><div class="groove"></div>receipt</div>
+    </div>
+  </div>
+
+  <script src="{% static 'js/atm.js' %}?v=2"></script>
+</body>
+</html>

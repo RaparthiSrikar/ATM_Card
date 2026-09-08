@@ -1,0 +1,65 @@
+{% extends "atm_app/base.html" %}
+{% block title %}Change PIN — ABC Bank ATM{% endblock %}
+
+{% block side_left %}
+  <a class="side-btn linked" href="{% url 'atm_app:dashboard' %}" title="Back to menu">L1</a>
+  <span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+{% block side_right %}
+  <span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span><span class="side-btn"></span>
+{% endblock %}
+
+{% block screen_header %}
+  <h2>Change PIN</h2>
+  <span class="clock" data-clock>--:--:--</span>
+{% endblock %}
+
+{% block content %}
+  {% if success %}
+    <div class="receipt">
+      <div class="receipt-status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        PIN changed successfully
+      </div>
+      <div class="receipt-row"><span class="k">Account</span><span class="v">{{ account.account_number }}</span></div>
+      <div class="receipt-row"><span class="k">Status</span><span class="v">Updated & securely stored</span></div>
+    </div>
+    <div class="btn-row" style="margin-top:20px;">
+      <a href="{% url 'atm_app:dashboard' %}" class="btn-atm btn-primary">Back to menu</a>
+    </div>
+  {% else %}
+    <p class="lede">Your PIN is never stored or shown in plain text — only a secure hash is kept.</p>
+
+    <form method="post" data-processing="Updating PIN…" novalidate>
+      {% csrf_token %}
+      <div class="atm-field">
+        <label for="{{ form.current_pin.id_for_label }}">Current PIN</label>
+        <input type="password" name="current_pin" id="{{ form.current_pin.id_for_label }}"
+          class="atm-input atm-pin {% if form.current_pin.errors %}is-invalid{% endif %}"
+          placeholder="••••" inputmode="numeric" maxlength="4" data-numeric="digits" required>
+        {% for error in form.current_pin.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="atm-field">
+        <label for="{{ form.new_pin.id_for_label }}">New PIN</label>
+        <input type="password" name="new_pin" id="{{ form.new_pin.id_for_label }}"
+          class="atm-input atm-pin {% if form.new_pin.errors %}is-invalid{% endif %}"
+          placeholder="••••" inputmode="numeric" maxlength="4" data-numeric="digits" required>
+        {% for error in form.new_pin.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="atm-field">
+        <label for="{{ form.confirm_pin.id_for_label }}">Confirm new PIN</label>
+        <input type="password" name="confirm_pin" id="{{ form.confirm_pin.id_for_label }}"
+          class="atm-input atm-pin {% if form.confirm_pin.errors %}is-invalid{% endif %}"
+          placeholder="••••" inputmode="numeric" maxlength="4" data-numeric="digits" required>
+        {% for error in form.confirm_pin.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+      </div>
+      {% if form.non_field_errors %}
+        <div class="field-error">{{ form.non_field_errors|join:", " }}</div>
+      {% endif %}
+      <div class="btn-row">
+        <button type="submit" class="btn-atm btn-primary">Update PIN</button>
+        <a href="{% url 'atm_app:dashboard' %}" class="btn-atm btn-ghost">Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

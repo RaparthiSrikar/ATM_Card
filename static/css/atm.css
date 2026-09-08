@@ -1,0 +1,722 @@
+/* =========================================================================
+   ABC BANK — ATM Management System
+   Design concept: the viewport IS the machine. A graphite kiosk housing
+   frames a glowing terminal screen; menu actions line up with physical
+   side-buttons (L1-L4 / R1-R4), the way a real ATM's bezel works.
+   ========================================================================= */
+
+:root {
+  /* -- Palette -- */
+  --graphite-900: #14171c;
+  --graphite-800: #1b1e24;
+  --graphite-700: #262b33;
+  --graphite-600: #333a45;
+
+  --screen-900: #071825;
+  --screen-800: #0d2338;
+  --screen-700: #163a5c;
+
+  --accent-teal: #2dd4bf;
+  --accent-teal-dim: #1a8f80;
+  --accent-gold: #f5a623;
+
+  --text-primary: #e7edf3;
+  --text-muted: #8aa0b4;
+  --text-faint: #56687a;
+
+  --success: #4ade80;
+  --success-bg: rgba(74, 222, 128, 0.12);
+  --error: #f87171;
+  --error-bg: rgba(248, 113, 113, 0.12);
+
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Consolas", monospace;
+
+  --radius-screen: 22px;
+  --radius-panel: 12px;
+  --radius-input: 8px;
+}
+
+* { box-sizing: border-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: radial-gradient(circle at 50% 0%, #23272f 0%, var(--graphite-900) 65%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+/* -------------------------------------------------------------------------
+   Kiosk shell
+   ------------------------------------------------------------------------- */
+
+.kiosk {
+  width: 100%;
+  max-width: 880px;
+  background: linear-gradient(180deg, var(--graphite-700) 0%, var(--graphite-800) 12%, var(--graphite-900) 100%);
+  border-radius: 34px;
+  padding: 30px 26px 22px;
+  box-shadow:
+    0 40px 80px -20px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+.kiosk::before {
+  /* brushed-metal top highlight */
+  content: "";
+  position: absolute;
+  top: 10px; left: 10px; right: 10px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+}
+
+.kiosk-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 18px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.kiosk-brand .bank-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-gold);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.bank-mark .chip {
+  width: 22px;
+  height: 16px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #ffd98a, var(--accent-gold) 60%, #b8790f);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+}
+
+.status-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+  background: var(--text-faint);
+}
+
+.status-led.on {
+  background: var(--success);
+  box-shadow: 0 0 8px 1px var(--success);
+  animation: pulse-led 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-led {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* -------------------------------------------------------------------------
+   Screen + side buttons row
+   ------------------------------------------------------------------------- */
+
+.terminal-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.side-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 26px 0;
+  flex: 0 0 34px;
+}
+
+.side-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--graphite-600);
+  background: linear-gradient(180deg, #3a4150, var(--graphite-700));
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: default;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.side-btn.linked {
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.side-btn.linked:hover {
+  border-color: var(--accent-teal);
+  transform: scale(1.08);
+}
+
+.side-btn.linked:active {
+  transform: scale(0.94);
+}
+
+.screen {
+  flex: 1;
+  min-width: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%),
+    radial-gradient(ellipse at 50% -10%, var(--screen-700) 0%, var(--screen-800) 45%, var(--screen-900) 100%);
+  border-radius: var(--radius-screen);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 30px 60px -30px rgba(0,0,0,0.6),
+    inset 0 0 40px rgba(45, 212, 191, 0.05);
+  padding: 28px 30px 26px;
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+  animation: screen-power-on 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes screen-power-on {
+  from { opacity: 0; filter: brightness(2.4); transform: scaleY(0.02); }
+  40%  { opacity: 1; filter: brightness(1.6); transform: scaleY(1); }
+  to   { opacity: 1; filter: brightness(1); transform: scaleY(1); }
+}
+
+.screen-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.screen-header h1,
+.screen-header h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.screen-header .clock {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  animation: content-fade-in 0.35s ease-out both;
+}
+
+@keyframes content-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.screen-body p.lede {
+  color: var(--text-muted);
+  margin: 0 0 20px;
+  max-width: 46ch;
+  line-height: 1.55;
+}
+
+/* -------------------------------------------------------------------------
+   Slots (card / cash / receipt) — thin physical detail under the screen
+   ------------------------------------------------------------------------- */
+
+.kiosk-slots {
+  display: flex;
+  justify-content: center;
+  gap: 46px;
+  padding: 18px 0 4px;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+
+.slot .groove {
+  width: 64px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--graphite-900);
+  box-shadow: inset 0 2px 3px rgba(0,0,0,0.8), inset 0 -1px 0 rgba(255,255,255,0.05);
+}
+
+/* -------------------------------------------------------------------------
+   Typography helpers
+   ------------------------------------------------------------------------- */
+
+.mono { font-family: var(--font-mono); }
+
+.balance-figure {
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--accent-teal);
+  letter-spacing: -0.01em;
+}
+
+.balance-label {
+  font-size: 12px;
+  text-transform: none;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+/* -------------------------------------------------------------------------
+   Forms
+   ------------------------------------------------------------------------- */
+
+.atm-field {
+  margin-bottom: 18px;
+}
+
+.atm-field label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+}
+
+.atm-input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-input);
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.atm-input::placeholder { color: var(--text-faint); }
+
+.atm-input:focus {
+  outline: none;
+  border-color: var(--accent-teal);
+  background: rgba(45, 212, 191, 0.05);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+}
+
+.atm-input.is-invalid {
+  border-color: var(--error);
+}
+
+.atm-pin {
+  letter-spacing: 0.5em;
+  font-size: 20px;
+}
+
+.field-error {
+  color: var(--error);
+  font-size: 12.5px;
+  margin-top: 6px;
+}
+
+.field-help {
+  color: var(--text-faint);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* Quick-amount chips (withdraw/deposit) */
+.quick-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.chip {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--accent-teal);
+  color: var(--text-primary);
+}
+
+/* -------------------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------------------- */
+
+.btn-atm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 12px 22px;
+  border-radius: var(--radius-input);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease, background 0.12s ease;
+  text-decoration: none;
+}
+
+.btn-atm:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--accent-teal);
+  color: #052620;
+}
+
+.btn-primary:hover { filter: brightness(1.08); }
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* -------------------------------------------------------------------------
+   Menu grid (dashboard) — mapped visually to the side buttons
+   ------------------------------------------------------------------------- */
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-panel);
+  padding: 14px 16px;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+  position: relative;
+}
+
+.menu-item:hover {
+  border-color: var(--accent-teal-dim);
+  background: rgba(45, 212, 191, 0.06);
+  transform: translateX(2px);
+}
+
+.menu-item .icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--screen-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent-teal);
+}
+
+.menu-item .label {
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.menu-item .side-tag {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.menu-item.danger .icon { color: var(--error); }
+.menu-item.danger:hover { border-color: var(--error); background: var(--error-bg); }
+
+/* -------------------------------------------------------------------------
+   Messages / toasts
+   ------------------------------------------------------------------------- */
+
+.atm-messages {
+  margin-bottom: 16px;
+}
+
+.atm-alert {
+  border-radius: var(--radius-panel);
+  padding: 12px 14px;
+  font-size: 13.5px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: alert-in 0.28s ease-out both;
+}
+
+@keyframes alert-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.atm-alert.error { background: var(--error-bg); color: #ffb4b4; border: 1px solid rgba(248,113,113,0.35); }
+.atm-alert.success { background: var(--success-bg); color: #b6f5c9; border: 1px solid rgba(74,222,128,0.35); }
+.atm-alert.warning { background: rgba(245,166,35,0.12); color: #ffd28f; border: 1px solid rgba(245,166,35,0.35); }
+
+/* -------------------------------------------------------------------------
+   Result / receipt panel (withdraw, deposit, transfer success)
+   ------------------------------------------------------------------------- */
+
+.receipt {
+  border: 1px dashed rgba(255,255,255,0.22);
+  border-radius: var(--radius-panel);
+  padding: 18px 20px;
+  background: rgba(255,255,255,0.02);
+  animation: receipt-print 0.4s ease-out both;
+  transform-origin: top center;
+}
+
+@keyframes receipt-print {
+  from { opacity: 0; transform: scaleY(0.7) translateY(-8px); }
+  to   { opacity: 1; transform: scaleY(1) translateY(0); }
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  padding: 6px 0;
+  border-bottom: 1px dotted rgba(255,255,255,0.1);
+}
+
+.receipt-row:last-child { border-bottom: none; }
+.receipt-row .k { color: var(--text-muted); }
+.receipt-row .v { font-family: var(--font-mono); color: var(--text-primary); }
+
+.receipt-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.receipt-status svg { width: 18px; height: 18px; }
+
+/* -------------------------------------------------------------------------
+   Card-insert animation (login)
+   ------------------------------------------------------------------------- */
+
+.card-slot-visual {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+  height: 46px;
+  position: relative;
+}
+
+.atm-card-graphic {
+  width: 84px;
+  height: 52px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #3a4150, var(--graphite-600));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 6px 14px rgba(0,0,0,0.4);
+  position: relative;
+  transform: translateY(0);
+}
+
+.atm-card-graphic::before {
+  content: "";
+  position: absolute;
+  top: 12px; left: 10px;
+  width: 16px; height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #ffd98a, var(--accent-gold));
+}
+
+.atm-card-graphic.inserting {
+  animation: card-insert 0.9s ease-in forwards;
+}
+
+@keyframes card-insert {
+  0%   { transform: translateY(0); opacity: 1; }
+  80%  { transform: translateY(-38px); opacity: 1; }
+  100% { transform: translateY(-46px); opacity: 0; }
+}
+
+/* -------------------------------------------------------------------------
+   Cash dispenser animation (withdraw success)
+   ------------------------------------------------------------------------- */
+
+.cash-stack {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 18px;
+  height: 40px;
+}
+
+.cash-note {
+  width: 58px;
+  height: 28px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #3c8a5c, #276b40);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+  margin: 0 -14px;
+  opacity: 0;
+  animation: note-out 0.5s ease-out forwards;
+}
+
+.cash-note:nth-child(1) { animation-delay: 0s; }
+.cash-note:nth-child(2) { animation-delay: 0.12s; }
+.cash-note:nth-child(3) { animation-delay: 0.24s; }
+.cash-note:nth-child(4) { animation-delay: 0.36s; }
+
+@keyframes note-out {
+  from { opacity: 0; transform: translateY(-14px) rotate(-6deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+
+/* -------------------------------------------------------------------------
+   Processing overlay (simulated ATM think-time before a result appears)
+   ------------------------------------------------------------------------- */
+
+.processing-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 24, 37, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 5;
+  border-radius: var(--radius-screen);
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(45, 212, 191, 0.2);
+  border-top-color: var(--accent-teal);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.processing-overlay span {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+/* -------------------------------------------------------------------------
+   Footer / helper row
+   ------------------------------------------------------------------------- */
+
+.screen-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.back-link {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.back-link:hover { color: var(--text-primary); }
+
+/* -------------------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 620px) {
+  .kiosk { padding: 20px 12px 16px; border-radius: 24px; }
+  .side-buttons { flex: 0 0 22px; }
+  .side-btn { width: 22px; height: 22px; font-size: 9px; }
+  .screen { padding: 20px 16px; min-height: 420px; }
+  .menu-grid { grid-template-columns: 1fr; }
+  .balance-figure { font-size: 32px; }
+  .kiosk-slots { gap: 24px; }
+}

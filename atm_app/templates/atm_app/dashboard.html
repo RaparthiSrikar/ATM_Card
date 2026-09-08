@@ -1,0 +1,71 @@
+{% extends "atm_app/base.html" %}
+{% block title %}Dashboard — ABC Bank ATM{% endblock %}
+
+{% block side_left %}
+  <a class="side-btn linked" href="{% url 'atm_app:dashboard' %}" title="Balance Enquiry">L1</a>
+  <a class="side-btn linked" href="{% url 'atm_app:withdraw' %}" title="Withdraw">L2</a>
+  <a class="side-btn linked" href="{% url 'atm_app:deposit' %}" title="Deposit">L3</a>
+  <a class="side-btn linked" href="{% url 'atm_app:transfer' %}" title="Transfer">L4</a>
+{% endblock %}
+{% block side_right %}
+  <a class="side-btn linked" href="{% url 'atm_app:change_pin' %}" title="Change PIN">R1</a>
+  <a class="side-btn linked" href="{% url 'atm_app:mini_statement' %}" title="Mini Statement">R2</a>
+  <span class="side-btn" title="Reserved">R3</span>
+  <a class="side-btn linked" href="{% url 'atm_app:logout' %}" title="Logout">R4</a>
+{% endblock %}
+
+{% block screen_header %}
+  <h1>Hi, {{ request.session.customer_name|default:"Customer" }}</h1>
+  <span class="clock" data-clock>--:--:--</span>
+{% endblock %}
+
+{% block content %}
+  <div class="balance-label">Account {{ account.account_number }} · available balance</div>
+  <div class="balance-figure" data-count-to="{{ account.balance|stringformat:'f' }}">₹0</div>
+
+  <div style="height:22px;"></div>
+
+  <div class="menu-grid">
+    <a class="menu-item" href="{% url 'atm_app:dashboard' %}">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/></svg></span>
+      <span class="label">Balance Enquiry</span>
+      <span class="side-tag">L1</span>
+    </a>
+
+    <a class="menu-item" href="{% url 'atm_app:withdraw' %}">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 4v12"/><path d="M7 12l5 5 5-5"/><path d="M5 20h14"/></svg></span>
+      <span class="label">Cash Withdrawal</span>
+      <span class="side-tag">L2</span>
+    </a>
+
+    <a class="menu-item" href="{% url 'atm_app:deposit' %}">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 20V8"/><path d="M7 12l5-5 5 5"/><path d="M5 20h14"/></svg></span>
+      <span class="label">Cash Deposit</span>
+      <span class="side-tag">L3</span>
+    </a>
+
+    <a class="menu-item" href="{% url 'atm_app:transfer' %}">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M4 8h13"/><path d="M14 4l3 4-3 4"/><path d="M20 16H7"/><path d="M10 12l-3 4 3 4"/></svg></span>
+      <span class="label">Fund Transfer</span>
+      <span class="side-tag">L4</span>
+    </a>
+
+    <a class="menu-item" href="{% url 'atm_app:change_pin' %}">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+      <span class="label">Change PIN</span>
+      <span class="side-tag">R1</span>
+    </a>
+
+    <a class="menu-item" href="{% url 'atm_app:mini_statement' %}">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/></svg></span>
+      <span class="label">Mini Statement</span>
+      <span class="side-tag">R2</span>
+    </a>
+
+    <a class="menu-item danger" href="{% url 'atm_app:logout' %}" style="grid-column: 1 / -1;">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
+      <span class="label">Logout</span>
+      <span class="side-tag">R4</span>
+    </a>
+  </div>
+{% endblock %}
